@@ -38,6 +38,10 @@ class Plugin : public kaleidoglyph::Plugin {
 
   //void postKeyboardReport(KeyEvent event);
 
+  void pressKey(KeyAddr k, Key key);
+  void releaseKey(KeyAddr k);
+  void typeProgmemString(const char* pgm_string, KeyAddr k);
+
  private:
   Controller& controller_;
 

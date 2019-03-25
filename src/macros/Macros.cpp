@@ -5,10 +5,12 @@
 
 #include <Arduino.h>
 
+#include <kaleidoglyph/Controller.h>
 #include <kaleidoglyph/Key.h>
 #include <kaleidoglyph/KeyAddr.h>
 #include <kaleidoglyph/KeyArray.h>
 #include <kaleidoglyph/KeyEvent.h>
+#include <kaleidoglyph/KeyEventHandlerId.h>
 #include <kaleidoglyph/KeyState.h>
 #include <kaleidoglyph/Plugin.h>
 
@@ -27,7 +29,7 @@ enum class MacroAction : byte __attribute__((weak)) {
 };
 
 __attribute__((weak))
-Key handleMacro(byte /*index*/) {
+Key handleMacro(byte /*index*/, KeyAddr /*k*/) {
   return cKey::clear;
 }
 
@@ -47,7 +49,7 @@ EventHandlerResult Plugin::onKeyEvent(KeyEvent& event) {
     if (isMacrosKey(event.key)) {
       MacrosKey macro_event_key{event.key};
       byte macro_index = macro_event_key.data();
-      event.key = handleMacro(macro_index);
+      event.key = handleMacro(macro_index, event.addr);
       if (event.key.isEmpty()) {
         return EventHandlerResult::abort;
       }
@@ -70,17 +72,17 @@ EventHandlerResult Plugin::onKeyEvent(KeyEvent& event) {
 const PROGMEM
 Key ascii_to_key_map[] = {
   // 0x21 - 0x30
-  lShift(Key_1),
-  lShift(Key_Quote),
-  lShift(Key_3),
-  lShift(Key_4),
-  lShift(Key_5),
-  lShift(Key_7),
+  withLeftShift(Key_1),
+  withLeftShift(Key_Quote),
+  withLeftShift(Key_3),
+  withLeftShift(Key_4),
+  withLeftShift(Key_5),
+  withLeftShift(Key_7),
   Key_Quote,
-  lShift(Key_9),
-  lShift(Key_0),
-  lShift(Key_8),
-  lShift(Key_Equals),
+  withLeftShift(Key_9),
+  withLeftShift(Key_0),
+  withLeftShift(Key_8),
+  withLeftShift(Key_Equals),
   Key_Comma,
   Key_Minus,
   Key_Period,
@@ -88,27 +90,27 @@ Key ascii_to_key_map[] = {
   Key_0,
 
   // 0x3a ... 0x40
-  lShift(Key_Semicolon),
+  withLeftShift(Key_Semicolon),
   Key_Semicolon,
-  lShift(Key_Comma),
+  withLeftShift(Key_Comma),
   Key_Equals,
-  lShift(Key_Period),
-  lShift(Key_Slash),
-  lShift(Key_2),
+  withLeftShift(Key_Period),
+  withLeftShift(Key_Slash),
+  withLeftShift(Key_2),
 
   // 0x5b ... 0x60
   Key_LeftBracket,
   Key_Backslash,
   Key_RightBracket,
-  lShift(Key_6),
-  lShift(Key_Minus),
+  withLeftShift(Key_6),
+  withLeftShift(Key_Minus),
   Key_Backtick,
 
   // 0x7b ... 0x7e
-  lShift(Key_LeftBracket),
-  lShift(Key_Backslash),
-  lShift(Key_RightBracket),
-  lShift(Key_Backtick),
+  withLeftShift(Key_LeftBracket),
+  withLeftShift(Key_Backslash),
+  withLeftShift(Key_RightBracket),
+  withLeftShift(Key_Backtick),
 };
 
 Key translateFromAscii(byte keycode) {
@@ -158,15 +160,25 @@ Key translateFromAscii(byte keycode) {
   return Key(key);
 }
 
-// void typeProgmemString(const char* pgm_string, KeyAddr k) {
-//   byte ascii_code;
-//   while (ascii_code = pgm_read_byte(pgm_string++)) {
-//     Key key = translateFromAscii(ascii_code);
-//     if (key == cKey::blank) continue;
-//     //pressKey(k, key);
-//     //releaseKey(k);
-//   }
-// }
+void Plugin::pressKey(KeyAddr k, Key key) {
+  KeyEvent event{k, cKeyState::injected_press, key, KeyEventHandlerId::macros};
+  controller_.handleKeyEvent(event);
+}
+
+void Plugin::releaseKey(KeyAddr k) {
+  KeyEvent event{k, cKeyState::injected_release};
+  controller_.handleKeyEvent(event);
+}
+
+void Plugin::typeProgmemString(const char* pgm_string, KeyAddr k) {
+  byte ascii_code;
+  while (ascii_code = pgm_read_byte(pgm_string++)) {
+    Key key = translateFromAscii(ascii_code);
+    if (key == cKey::blank) continue;
+    pressKey(k, key);
+    releaseKey(k);
+  }
+}
 
 // void playProgmemMacro(const Macro* macro_p) {
   

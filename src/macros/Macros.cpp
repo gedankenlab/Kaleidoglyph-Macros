@@ -161,7 +161,7 @@ Key translateFromAscii(byte keycode) {
 }
 
 void Plugin::pressKey(KeyAddr k, Key key) {
-  KeyEvent event{k, cKeyState::injected_press, key, KeyEventHandlerId::macros};
+  KeyEvent event{k, cKeyState::injected_press, key};
   controller_.handleKeyEvent(event);
 }
 

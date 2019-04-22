@@ -15,7 +15,7 @@ namespace kaleidoglyph {
 namespace macros {
 
 
-class Plugin : public kaleidoglyph::Plugin {
+class Plugin : public EventHandler {
 
  public:
   Plugin(Controller& controller) : controller_(controller) {}
